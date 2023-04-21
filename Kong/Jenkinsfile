@@ -1,0 +1,78 @@
+pipeline{   
+    parameters {
+            string defaultValue: '', description: 'Enter Your Branch', name: 'BRANCH'
+            choice choices: ['default', 'sandbox','production'], description: "Choose Workspace From Dropdown- ", name: 'WORKSPACE'
+            booleanParam defaultValue: false, description: 'Confirm If A OpenSpec Needs To Be Uploaded', name: 'UPLOAD_OPEN_SPEC'
+            string defaultValue: '', description: 'Enter Open Spec Config File Name', name: 'OPEN_SPEC_FILE'
+            booleanParam defaultValue: false, description: 'Confirm If A Kong Config Files Needs To Be Uploaded', name: 'UPLOAD_KONG_CONFIG'
+            string defaultValue: '', description: 'Enter Kong Config File Name', name: 'KONG_CONFIG_FILE'
+        }
+   agent any
+   stages {
+        //Checkout Git Repo
+        stage('Checkout') {
+            steps {
+                pwd()
+                git  url: 'https://github.com/rk23597/ApiOps.git', branch: params.BRANCH
+            }
+        }
+        //Lint the OpenAPI spec using Insomnia CLI
+        stage('Lint OpenAPI Spec') {
+            when { equals expected: true, actual: params.UPLOAD_OPEN_SPEC }
+            steps {
+                sh 'inso lint spec ./apiConfig/$OPEN_SPEC_FILE'
+            }
+        }
+        //Generate Kong configuration in declarative format
+        stage('Generate Kong configuration in declarative format') {
+            when { equals expected: true, actual: params.UPLOAD_OPEN_SPEC }
+            steps {
+                sh 'inso generate config ./apiConfig/$OPEN_SPEC_FILE --type declarative -o ./apiConfig/$OPEN_SPEC_FILE'
+            }
+        }
+        //Display the contents of the generated Kong configuration
+        stage('open kong.yaml') {
+            when { equals expected: true, actual: params.UPLOAD_OPEN_SPEC }
+            steps {
+                sh 'cat ./apiConfig/$OPEN_SPEC_FILE'
+            }
+        }
+        //creating a environment value
+        stage('Creating a env variable') {
+            steps {
+                script {
+                    if (params.UPLOAD_OPEN_SPEC) {
+                        env.KONG_CONFIG = "$OPEN_SPEC_FILE"
+                    }else if(params.UPLOAD_KONG_CONFIG){
+                        env.KONG_CONFIG = "$KONG_CONFIG_FILE"
+                    }
+                }
+            }
+        }
+        //Validate the Kong configuration using deck CLI
+        stage('Validate the Kong configuration using deck CLI') {
+            steps {
+                echo "$KONG_CONFIG"
+                sh 'deck validate -s ./apiConfig/$KONG_CONFIG'
+            }
+        }
+        //Convert the Kong configuration to version 3.x using deck CLI
+        stage('Convert kong declarative') {
+            steps {
+                
+                sh 'yes | deck convert --from kong-gateway-2.x --to kong-gateway-3.x --input-file ./apiConfig/$KONG_CONFIG --output-file ./apiConfig/$KONG_CONFIG'
+            }
+        } 
+        //Deploy to Kong
+        stage('Deploy to Kong') {
+            steps {
+                sh 'deck sync -s ./apiConfig/$KONG_CONFIG --kong-addr http://34.125.102.22:8001 --workspace $WORKSPACE --tls-skip-verify'
+            }
+        }
+   }
+   post {
+        always {
+           deleteDir()
+       }
+    }
+}
