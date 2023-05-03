@@ -1,0 +1,22 @@
+pipeline{   
+   agent any
+   stages {
+        //Checkout Git Repo
+        stage('Checkout') {
+            steps {
+                git  url: 'https://github.com/rk23597/ApiOps.git'
+            }
+        }
+        //Lint the OpenAPI spec using Insomnia CLI
+        stage('Deploy to dev portal') {
+            steps {
+                sh 'portal deploy --preserve default -D -a http://34.125.114.21:8001 '
+            }
+        }
+   }
+   post {
+        always {
+           deleteDir()
+       }
+    }
+}
