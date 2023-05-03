@@ -10,7 +10,7 @@ pipeline{
         //Lint the OpenAPI spec using Insomnia CLI
         stage('Deploy to dev portal') {
             steps {
-                sh 'portal deploy --preserve default -D '
+                sh ' KONG_ADMIN_URL=http://34.125.114.21:8001 portal deploy --preserve default -D '
             }
         }
    }
