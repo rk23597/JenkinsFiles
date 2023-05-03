@@ -10,7 +10,7 @@ pipeline{
         //Lint the OpenAPI spec using Insomnia CLI
         stage('Deploy to dev portal') {
             steps {
-                sh 'portal deploy --preserve default -D -a http://34.125.114.21:8001 '
+                sh 'portal deploy --preserve default -D '
             }
         }
    }
