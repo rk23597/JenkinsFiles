@@ -42,7 +42,7 @@ pipeline{
         //Deploy to Kong
         stage('Deploy to Kong') {
             steps {
-                sh 'deck sync -s ./apiConfig/httpbinOAS-kong-3x.yaml --kong-addr http://34.125.114.21:8001 --workspace $WORKSPACE --tls-skip-verify'
+                sh 'deck sync -s ./apiConfig/httpbinOAS-kong-3x.yaml --kong-addr http://34.125.114.21:8001 --tls-skip-verify'
             }
         }
    }
