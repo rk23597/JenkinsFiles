@@ -2,7 +2,6 @@ pipeline{
     parameters {
             string defaultValue: '', description: 'Enter Your Branch', name: 'BRANCH'
             choice choices: ['default', 'sandbox','production'], description: "Choose Workspace From Dropdown- ", name: 'WORKSPACE'
-            booleanParam defaultValue: false, description: 'Confirm If A OpenSpec Needs To Be Uploaded', name: 'UPLOAD_OPEN_SPEC'
             string defaultValue: '', description: 'Enter Open Spec Config File Name', name: 'OPEN_SPEC_FILE'
         }
    agent any
@@ -35,7 +34,7 @@ pipeline{
         //Validate the Kong configuration using deck CLI
         stage('Validate the Kong configuration using deck CLI') {
             steps {
-                echo "$KONG_CONFIG"
+                echo "$OPEN_SPEC_FILE"
                 sh 'deck validate -s ./apiConfig/$OPEN_SPEC_FILE'
             }
         }
