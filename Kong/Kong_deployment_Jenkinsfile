@@ -2,7 +2,6 @@ pipeline{
     parameters {
             string defaultValue: '', description: 'Enter Your Branch', name: 'BRANCH'
             choice choices: ['default', 'sandbox','production'], description: "Choose Workspace From Dropdown- ", name: 'WORKSPACE'
-            string defaultValue: '', description: 'Enter Open Spec Config File Name', name: 'OPEN_SPEC_FILE'
         }
    agent any
    stages {
@@ -12,16 +11,30 @@ pipeline{
                 git  url: 'https://github.com/rk23597/ApiOps.git', branch: params.BRANCH
             }
         }
+        //Set Some Env Vars
+        stage('Set Some Env Vars') {
+            steps {
+                sh '''folder_path="apiConfig"
+                      file_count=$(ls -1 "$folder_path" | wc -l)
+                      echo $file_count'''
+            }
+        }
         //Lint the OpenAPI spec using Insomnia CLI
         stage('Lint OpenAPI Spec') {
             steps {
-                sh 'inso lint spec ./apiConfig/$OPEN_SPEC_FILE'
+                sh '''for file_path in "$folder_path"/*
+                       do
+                         inso lint spec ./$file_path
+                       done'''
             }
         }
         //Generate Kong configuration in declarative format
         stage('Generate Kong configuration in declarative format') {
             steps {
-                sh 'inso generate config ./apiConfig/$OPEN_SPEC_FILE --type declarative -o ./apiConfig/$OPEN_SPEC_FILE'
+                sh '''for file_path in "$folder_path"/*
+                        do
+                            inso generate config ./$file_path --type declarative -o ./$file_path
+                        done'''
             }
         }
         //Display the contents of the generated Kong configuration
