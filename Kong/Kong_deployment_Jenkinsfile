@@ -8,6 +8,7 @@ pipeline{
         //Checkout Git Repo
         stage('Checkout') {
             steps {
+                pwd()
                 git  url: 'https://github.com/rk23597/ApiOps.git', branch: params.BRANCH
             }
         }
@@ -67,7 +68,8 @@ pipeline{
    }
    post {
         always {
-           deleteDir()
+           echo "hello Rakesh"
+           //deleteDir()
        }
     }
 }
