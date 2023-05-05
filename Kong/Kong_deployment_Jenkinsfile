@@ -1,6 +1,6 @@
 pipeline{   
     parameters {
-            string defaultValue: '', description: 'Enter Your Branch', name: 'BRANCH'
+            string defaultValue: 'main', description: 'Enter Your Branch', name: 'BRANCH'
             choice choices: ['default', 'sandbox','production'], description: "Choose Workspace From Dropdown- ", name: 'WORKSPACE'
         }
    agent any
